@@ -32,8 +32,8 @@ public class FrequencyTable {
 		//Normalize row lengths
 		int rowLength = Collections.max(matrix, (rowA, rowB) -> rowA.size() - rowB.size()).size();
 		
-		if(rowLength < 2 || matrix.size() < 2) {
-			throw new IllegalArgumentException("Table is too small. Minimum 2x2, current " + rowLength + "x" + matrix.size());
+		if(rowLength < 1 || matrix.size() < 1) {
+			throw new IllegalArgumentException("Table is too small. Minimum 1x1, current " + rowLength + "x" + matrix.size());
 		}
 		
 		for(ArrayList<Double> row : matrix) {
@@ -100,27 +100,50 @@ public class FrequencyTable {
 	}
 	
 	/**
-	 * Determines if the values of the table are valid
-	 * Unknowns are assumed correct
+	 * Determines if there are unknowns in the table
 	 * 
-	 * @return If the table is valid
+	 * @return Whether or not the table has unkowns
 	 */
-	public boolean isValid() {
-		//Test each row
+	public boolean hasUnknowns() {
 		for(ArrayList<Double> row : matrix) {
-			int sum = 0;
-			
-			for(int i = 0; i < row.size() - 1; i++) {
-				sum += row.get(i);
+			for(double d : row) {
+				if(d < 0) return true;
 			}
-			
-			if(sum != row.get(row.size() - 1)) return false;
 		}
 		
-		//Test each column
+		return false;
+	}
+	
+	/**
+	 * Finds a solveable point in the table
+	 * 
+	 * @return The coordinates of a point to solve in the form [row, col]
+	 */
+	private int[] findSolveablePoint() {
+		int numRows = matrix.size(),
+			numCols = matrix.get(0).size();
 		
+		//Find a point that can be solved by its row
+		for(int row = 0; row < numRows; row++) {
+			int blanks = 0;
+			
+			for(Double d : matrix.get(row)) {
+				if(d < 0) blanks++;
+			}
+			
+			//We found a point!
+			if(blanks == 1) {
+				return new int[] {
+					row,
+					matrix.get(row).indexOf(-1d)
+				};
+			}
+		}
 		
-		return true;
+		//No row found, try columns
+		//TODO
+		
+		return null; //Could not find any solveable blanks
 	}
 	
 	/**
@@ -129,6 +152,31 @@ public class FrequencyTable {
 	 * @return If all blanks were solved
 	 */
 	public boolean solve() {
+		while(hasUnknowns()) {
+			//Find a solveable blank
+			int[] blankPoint = findSolveablePoint();
+		}
+		
 		return true;
+	}
+	
+	@Override
+	public String toString() {
+		String s = "";
+		
+		for(ArrayList<Double> row : matrix) {
+			s += ",\n[";
+			
+			for(int i = 0; i < row.size(); i++) {
+				String str = Double.toString(row.get(i));
+				str = str.substring(0, str.length() > 5 ? 5 : str.length());
+				
+				s += (i == 0 ? "" : ", ") + str;
+			}
+			
+			s += "]";
+		}
+		
+		return s.substring(2);
 	}
 }
